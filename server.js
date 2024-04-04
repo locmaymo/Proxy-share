@@ -5,7 +5,7 @@ const https = require("https");
 const { randomUUID } = require("crypto");
 const cors = require("cors");
 
-const port = 7860;
+const port = process.env.PORT;
 const baseUrl = "https://chat.openai.com";
 const apiUrl = `${baseUrl}/backend-api/conversation`;
 const refreshInterval = 60000;
