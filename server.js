@@ -8,7 +8,7 @@ const cors = require("cors");
 const port = process.env.PORT;
 const baseUrl = "https://chat.openai.com";
 const apiUrl = `${baseUrl}/backend-api/conversation`;
-const refreshInterval = 60000;
+const refreshInterval = 60000 * 5; // 5 minutes
 const errorWait = 120000;
 
 let token;
@@ -82,7 +82,7 @@ function handleError(res, isStream, errMsg = "\n**Có lỗi vui lòng liên hệ
     id: "chatcmpl-92gShiDhcnQ6lkeJeIByrb0yr9vJy",
     object: "chat.completion",
     created: Date.now(),
-    model: "claude-2",
+    model: "gpt-3.5-turbo",
     choices: [
       {
         index: 0,
@@ -209,7 +209,6 @@ async function handleChatCompletion(req, res) {
 
             fullContent = content.length > fullContent.length ? content : fullContent;
         }
-        console.log("Response:", fullContent);
 
         if (req.body.stream) {
             res.write(
