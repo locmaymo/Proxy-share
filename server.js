@@ -254,6 +254,20 @@ app.use((req, res) =>
     })
 );
 
+app.get('/v1/models', async (req, res) => {
+    res.json({
+        "object": "list",
+        "data": [
+            {
+                "id": "gpt-3.5-turbo",
+                "object": "model",
+                "created": 1677610602,
+                "owned_by": "openai"
+            }
+        ]
+    });
+});
+
 app.listen(port, () => {
     console.log(`💡 Server is running at http://localhost:${port}`);
 
