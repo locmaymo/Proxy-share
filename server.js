@@ -243,16 +243,6 @@ app.use(cors());
 
 app.post("/v1/chat/completions", handleChatCompletion);
 
-app.use((req, res) =>
-    res.status(404).send({
-        status: false,
-        error: {
-            message: `The requested endpoint was not found. please make sure to use "http://localhost:3040/v1" as the base URL.`,
-            type: "invalid_request_error",
-        },
-        support: "loc",
-    })
-);
 
 app.get('/v1/models', async (req, res) => {
     res.json({
