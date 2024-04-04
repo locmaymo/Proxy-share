@@ -257,6 +257,10 @@ async function handleChatCompletion(req, res) {
         res.end();
     } catch (error) {
         if (!res.headersSent) res.setHeader("Content-Type", "application/json");
+        // nếu code 413
+        if (error.response && error.response.status === 413) {
+            return handleError(res, req.body.stream, "Sorry, the message is too long for me to process. Please set context size Token to 7000 and try again.");
+        }
         handleError(res, req.body.stream, error.message);
     }
 }
