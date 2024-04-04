@@ -75,6 +75,41 @@ const axiosInstance = axios.create({
     },
 });
 
+function handleError(res, isStream, errMsg = "\n**Có lỗi vui lòng liên hệ admin tại** <a href='https://www.messenger.com/t/103965857842703/'>👉Messenger👈</a>") {
+  // If the request hasn't finished, notify the user that there was an error and finish
+  // the request properly, so that ST isn't left hanging.
+  let jsonResp = {
+    id: "chatcmpl-92gShiDhcnQ6lkeJeIByrb0yr9vJy",
+    object: "chat.completion",
+    created: Date.now(),
+    model: "claude-2",
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: errMsg,
+        },
+        logprobs: null,
+        finish_reason: "stop"
+      }
+    ],
+    usage: {
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      total_tokens: 0,
+    },
+  };
+  if (!res.writableEnded) {
+    if (isStream) {
+      res.write(`data: ${JSON.stringify(jsonResp)}\r\n\r\n`);
+    } else {
+      res.json(jsonResp);
+    }
+    res.end();
+  }
+}
+
 async function getNewSessionId() {
     let newDeviceId = randomUUID();
     const response = await axiosInstance.post(
@@ -219,21 +254,10 @@ async function handleChatCompletion(req, res) {
                 })
             );
         }
-
         res.end();
     } catch (error) {
         if (!res.headersSent) res.setHeader("Content-Type", "application/json");
-        res.write(
-            JSON.stringify({
-                status: false,
-                error: {
-                    message: "An error happened, please make sure your request is SFW, or use a jailbreak to bypass the filter.",
-                    type: "invalid_request_error",
-                },
-                support: "https://discord.pawan.krd",
-            })
-        );
-        res.end();
+        handleError(res, req.body.stream, error.message);
     }
 }
 
