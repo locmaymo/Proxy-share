@@ -258,7 +258,7 @@ async function handleChatCompletion(req, res) {
         // trả về lỗi bằng lời ngẫu nhiên bằng tiếng anh từ 1 trong 3 lỗi "Xin lỗi, Tôi không thể làm theo yêu cầu đó", "Xin lỗi, hãy thảo luận theo một hướng tích cực hơn", "Là một AI tôi không được phép thực hiện hành động đó"
         let errorMessages = ["Sorry, I can't comply with that request.", "Sorry, please discuss in a more positive direction.", "As an AI, I am not allowed to perform that action."];
         let randomError = errorMessages[Math.floor(Math.random() * errorMessages.length)];
-        handleError(res, req.body.stream, randomError);
+        handleError(res, req.body.stream, error.message);
     }
 }
 
