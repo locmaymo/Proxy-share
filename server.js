@@ -7,7 +7,7 @@ const cors = require("cors");
 
 const port = process.env.PORT;
 const baseUrl = "https://chat.openai.com";
-const apiUrl = `${baseUrl}/backend-api/conversation`;
+const apiUrl = `https://ios.chat.openai.com/backend-api/conversation`;
 const refreshInterval = 60000 * 5; // 5 minutes
 const errorWait = 120000;
 
@@ -57,21 +57,19 @@ async function* StreamCompletion(data) {
 const axiosInstance = axios.create({
     httpsAgent: new https.Agent({ rejectUnauthorized: false }),
     headers: {
-        accept: "*/*",
-        "accept-language": "en-US,en;q=0.9",
-        "cache-control": "no-cache",
-        "content-type": "application/json",
-        "oai-language": "en-US",
-        origin: baseUrl,
-        pragma: "no-cache",
-        referer: baseUrl,
-        "sec-ch-ua": '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJxdWFuaHV5MTk5MDA5QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS9hdXRoIjp7InBvaWQiOiJvcmctR3F1SlNremJpbHUxYjhyTkh3bmlLRWtkIiwidXNlcl9pZCI6InVzZXItaTlOSU1pMHY5SnRkV0FZWlExQVEzcko1In0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJnb29nbGUtb2F1dGgyfDEwOTE5NTA0NjAzODk1ODA4NjQwNCIsImF1ZCI6WyJodHRwczovL2FwaS5vcGVuYWkuY29tL3YxIiwiaHR0cHM6Ly9vcGVuYWkub3BlbmFpLmF1dGgwYXBwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3MTM2Nzg2MjIsImV4cCI6MTcxNDU0MjYyMiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBtb2RlbC5yZWFkIG1vZGVsLnJlcXVlc3Qgb3JnYW5pemF0aW9uLnJlYWQgb3JnYW5pemF0aW9uLndyaXRlIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoicGRsTElYMlk3Mk1JbDJyaExoVEU5VlY5Yk45MDVrQmgifQ.LZ5wShevYutyuRgVAZ3A2IwcVFfbBD9l3S8ZLmL1xFywRFOsqsiXLP5-T-VymvV9ebFb64QtfhcHtqRH2OwD1Weu55D-h-sA5ndeTLQMzUMH92zchOsxuJcha3mbDhN8S28Xgeb4rbwdPNN0Veu-1f8bsPyh6zVogTc-khUc45Ki4HEfsP7dWKrptf5QD0t5pBgAV3a1Pa9OSU8gCVAU2Sjp91JrB7yY8vsgqcTYUspHHjx9VoP0xoDnlJGh_q90FbHCALH4fhcSiUrKHPt6PmjUSeJfCjn_yRTd-PsCWPPpWFkAeOuu5frElJBMzPqo6jIApUYkHJxipxplTWp_dA',
+        'Accept-Language': 'vi-VN,vi;q=0.9',
+        'oai-device-id': '9688CD4A-DED7-4A24-9E0B-55F10CD24B86',
+        'baggage': 'sentry-environment=production,sentry-public_key=1a01a4d155f3487186fbf103278eb9ed,sentry-release=com.openai.chat%401.2024.101%2B24862,sentry-trace_id=541240aa416144c9b2a0c9e9633717fe',
+        'Cache-Control': 'no-cache',
+        'sentry-trace': '541240aa416144c9b2a0c9e9633717fe-04bcd90656874ddc-0',
+        'content-length': '489',
+        'user-agent': 'ChatGPT/1.2024.101 (iOS 17.4.1; iPhone15,3; build 24862)',
+        'oai-client-type': 'ios',
+        'accept-encoding': 'gzip, deflate, br',
+        'cookie': '_uasid="Z0FBQUFBQm1KS2tqZnkzVmpJS1h3R0xYLUNmcFZmR1JVQ1lFUF9ET1dsT1BvaWVfcHZKdUxteHVMWm1GcWJUMWNmQjIzUWJLR0RIbVRyWkIzcXFyZTBPWGZGNTZ3TThiYWt1ai03OWVPTzkxN1ZfcW1zMHN4RlNSdUlVbEQ2NjI3Z2wtemt5Y3RTRjRCVmMyQjBYZjBvN3Zmb0lSS21QZWt3TEtrZUJJa3pWaDhkSHFHOG5TNjF4WTFYSHZUTTgwNGtqbDFlX25iWmo5Y2NWQXBfd1JNaHQwTURHWlQtZ3g4RXpNbXRXR2pKMGtsNy02dlhkT0xTdHp4QWpKVUxDd3ZJcm5LUDZoOGwxam5WM0RPZXg1bjM5LV8za0d1SGs3anFoYW1OcnN5MEdSaU1iZTRIRmRGTm9GbEstVkpwMm5HR0J5NUdYTHhXWTRReW5tY18tWkNYU3V6NWJrRkJ2NlBnPT0="; _umsid="Z0FBQUFBQm1KS2tqdVZpcHdlRWhLSjZERlZCSVgteTQ2TkNxdjhreTlKVjhhZVZlcldsWmlWMHhELWpfSWJJS2xYMm54X3VaM0dxcVFtMVFDRnhjZjRLOHJMUm5MU3RWTTdSMTctLUQ1enB6ZXlua2ZURHZxNkZya29PR2w1OGF5N2UzREllMl8zbFMwdG1wWGtDR0MxRWEtekVpZXBYRlhKNlZyQnNzaUE1ck0tTmpSUE9yNWEyQnFPNEd0amE0TXVQV0RiYUY4MFc0WVk3MVZFYS0tLXJRZlB4QkR3SEVHbDBNN3lFMVRGd1hqVWxZSzcxTUNrMD0="; _devicecheck=user-i9NIMi0v9JtdWAYZQ1AQ3rJ5:1713678623-fJOV67jqRlne1KZN16QQiWC5TnR051NX2dv%2FDYhI%2BdQ%3D; __cf_bm=aILQ8w3aYiQWO4InvbJc7dHIgY9ksvMWsqTEO27Zk.I-1713678563-1.0.1.1-BssvF4KU86c_JHgNGQ_xC5PNt6KPYRYeHL1yoKmXxAEp8D6lLNxTngMDCGDQJlC76XL10VbtP8trlELT.3z6CA; _cfuvid=BJk0W5nzk97q9PCEGG6QvEtebssqOFgNZabFV16ZANs-1713678563991-0.0.1.1-604800000; _preauth_devicecheck=9688CD4A-DED7-4A24-9E0B-55F10CD24B86:1713678563-8NDsubAzDXnKfPAIU%2FVpzAsJJ9uMZjSSpL7BM3A6Hxo%3D'
     },
 });
 
@@ -155,10 +153,6 @@ async function handleChatCompletion(req, res) {
 
         const response = await axiosInstance.post(apiUrl, body, {
             responseType: "stream",
-            headers: {
-                "oai-device-id": oaiDeviceId,
-                "openai-sentinel-chat-requirements-token": token,
-            },
         });
 
         if (req.body.stream) {
