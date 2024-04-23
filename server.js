@@ -6,18 +6,42 @@ const { randomUUID } = require("crypto");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 
+const app = express();
 const port = process.env.PORT || 3000;
 const baseUrl = "https://chat.openai.com";
 const apiUrl = `https://chat.openai.com/backend-api/conversation`;
 
-
-
 // Định nghĩa rate limiter
 const limiter = rateLimit({
-    windowMs: 10 * 1000, // 10s
-    max: 1, // số lần request tối đa trong 10s 
-    message: "Too many requests from this IP, please try again after a 10 seconds",
+    windowMs: 20 * 1000, // 20s
+    max: 1, // số lần request tối đa trong 20s 
+    handler: function(req, res, /*next*/) {
+        res.status(429).json({
+            error: {
+                message: "You are sending too fast, please try wait 10 seconds",
+                code: 429
+            }
+        });
+    }
+    
 });
+
+app.use(cors());
+app.use(limiter)
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+
+const options = {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour12: true,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+
+let gptRequests = 1;
 
 
 function GenerateCompletionId(prefix = "cmpl-") {
@@ -67,26 +91,6 @@ let cookie = '_dd_s=rum=0&expire=1713796351291; intercom-device-id-dgkjq2bp=ce27
 
 
 
-
-const requireToken = axios.create({
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    headers: {
-        'content-type': 'application/json',
-        'accept': '*/*',
-        'authorization': authorization,
-        'sec-fetch-site': 'same-origin',
-        'oai-language': 'en-US',
-        'oai-device-id': oaiDeviceId,
-        'accept-language': 'vi-VN,vi;q=0.9',
-        'sec-fetch-mode': 'cors',
-        'origin': 'https://chat.openai.com',
-        'user-agent': userAgent,
-        'referer': 'https://chat.openai.com/',
-        'sec-fetch-dest': 'empty',
-        'cookie': cookie
-    }
-});
-
 function handleError(res, isStream, errMsg = "\n**Có lỗi vui lòng liên hệ admin tại** <a href='https://www.messenger.com/t/103965857842703/'>👉Messenger👈</a>") {
   // If the request hasn't finished, notify the user that there was an error and finish
   // the request properly, so that ST isn't left hanging.
@@ -128,11 +132,30 @@ async function getRequirementsToken() {
         {},
     );
     chatRequirementsToken = response.data.token;
-    console.log(`System: Successfully refreshed chat requirements token.`);
 }
 
-async function handleChatCompletion(req, res) {
-    console.log("Request:", `${req.method} ${req.originalUrl}`, `${req.body?.messages?.length ?? 0} messages`, req.body.stream ? "(stream-enabled)" : "(stream-disabled)");
+const requireToken = axios.create({
+    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    headers: {
+        'content-type': 'application/json',
+        'accept': '*/*',
+        'authorization': authorization,
+        'sec-fetch-site': 'same-origin',
+        'oai-language': 'en-US',
+        'oai-device-id': oaiDeviceId,
+        'accept-language': 'vi-VN,vi;q=0.9',
+        'sec-fetch-mode': 'cors',
+        'origin': 'https://chat.openai.com',
+        'user-agent': userAgent,
+        'referer': 'https://chat.openai.com/',
+        'sec-fetch-dest': 'empty',
+        'cookie': cookie
+    }
+});
+
+app.post("/v1/chat/completions", async (req, res) => {  
+
+    console.log(`Request ${gptRequests} gpt35 at ${new Date().toLocaleTimeString('vi-VN', options)}`);
     try {
         const body = {
             action: "next",
@@ -273,6 +296,8 @@ async function handleChatCompletion(req, res) {
                 })
             );
         }
+        console.log(`✅ Request ${gptRequests} gpt35 done.`)
+        gptRequests++;
         res.end();
     } catch (error) {
         if (!res.headersSent) res.setHeader("Content-Type", "application/json");
@@ -287,15 +312,8 @@ async function handleChatCompletion(req, res) {
         handleError(res, req.body.stream, error.message);
         console.error("Error:", error);
     }
-}
 
-const app = express();
-app.use(bodyParser.json());
-app.use(cors());
-app.use(limiter)
-
-app.post("/v1/chat/completions", handleChatCompletion);
-
+});
 
 app.get('/v1/models', async (req, res) => {
     res.json({
