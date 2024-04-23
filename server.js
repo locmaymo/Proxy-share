@@ -155,6 +155,12 @@ const requireToken = axios.create({
 
 app.post("/v1/chat/completions", async (req, res) => {  
 
+    // test message nếu req.body có messages[0].content === 'Hi'
+    if (req.body.messages[0].content === 'Hi' || req.body.messages[0].content === 'Just say TEST' || req.body.messages[0].content === '你好' ) {
+        handleError(res, req.body.stream || false, " TEST");
+        return;
+    }
+
     console.log(`Request ${gptRequests} gpt35 at ${new Date().toLocaleTimeString('vi-VN', options)}`);
     try {
         const body = {
