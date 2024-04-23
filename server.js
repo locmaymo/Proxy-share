@@ -145,19 +145,19 @@ async function getRequirementsToken() {
     console.log(`System: Successfully refreshed chat requirements token.`);
 }
 
-async function getNewSessionId() {
-    let newDeviceId = randomUUID();
-    const response = await chatCompletion.post(
-        `${baseUrl}/backend-anon/sentinel/chat-requirements`,
-        {},
-        {
-            headers: { "oai-device-id": newDeviceId },
-        }
-    );
-    console.log(`System: Successfully refreshed session ID and token. ${!token ? "(Now it's ready to process requests)" : ""}`);
-    oaiDeviceId = newDeviceId;
-    token = response.data.token;
-}
+// async function getNewSessionId() {
+//     let newDeviceId = randomUUID();
+//     const response = await chatCompletion.post(
+//         `${baseUrl}/backend-anon/sentinel/chat-requirements`,
+//         {},
+//         {
+//             headers: { "oai-device-id": newDeviceId },
+//         }
+//     );
+//     console.log(`System: Successfully refreshed session ID and token. ${!token ? "(Now it's ready to process requests)" : ""}`);
+//     oaiDeviceId = newDeviceId;
+//     token = response.data.token;
+// }
 
 function enableCORS(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -191,7 +191,7 @@ async function handleChatCompletion(req, res) {
         // get new token each request
         await getRequirementsToken();
 
-        const response = await axiosInstance.post(apiUrl, body, {
+        const response = await chatCompletion.post(apiUrl, body, {
             responseType: "stream",
         });
 
