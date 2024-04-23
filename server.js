@@ -11,6 +11,7 @@ const port = process.env.PORT || 3000;
 const baseUrl = "https://chat.openai.com";
 const apiUrl = `https://chat.openai.com/backend-api/conversation`;
 
+app.set('trust proxy', 1); // trust first proxy
 // Định nghĩa rate limiter
 const limiter = rateLimit({
     windowMs: 20 * 1000, // 20s
