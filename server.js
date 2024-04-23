@@ -10,7 +10,6 @@ const port = process.env.PORT || 3000;
 const baseUrl = "https://chat.openai.com";
 const apiUrl = `https://chat.openai.com/backend-api/conversation`;
 
-app.use(cors());
 
 
 // Định nghĩa rate limiter
@@ -20,8 +19,6 @@ const limiter = rateLimit({
     message: "Too many requests from this IP, please try again after a 10 seconds",
 });
 
-
-app.use(limiter);
 
 function GenerateCompletionId(prefix = "cmpl-") {
     const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -295,6 +292,7 @@ async function handleChatCompletion(req, res) {
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+app.use(limiter)
 
 app.post("/v1/chat/completions", handleChatCompletion);
 
