@@ -303,9 +303,9 @@ app.post("/v1/chat/completions", async (req, res) => {
                 })
             );
         }
+        res.end();
         console.log(`✅ Request ${gptRequests} gpt35 done.`)
         gptRequests++;
-        res.end();
     } catch (error) {
         if (!res.headersSent) res.setHeader("Content-Type", "application/json");
         // nếu code 413
