@@ -12,7 +12,6 @@ const refreshInterval = 60000 * 5; // 5 minutes
 const errorWait = 120000;
 
 let token;
-let oaiDeviceId;
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -54,23 +53,52 @@ async function* StreamCompletion(data) {
     yield* linesToMessages(chunksToLines(data));
 }
 
-const axiosInstance = axios.create({
+let chatRequirementsToken;
+let authorization = 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJxbDRldmVyeXRoaW5nQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS9hdXRoIjp7InBvaWQiOiJvcmctdDZ2cDZISWZZZk1oTVEwa2ZpWWJnSDFCIiwidXNlcl9pZCI6InVzZXItVHJVbkpmTElEMW9zWDBMRjY5RW9Eb240In0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJnb29nbGUtb2F1dGgyfDExNzY2MzIzNzg4MzU2OTY3NDQwOCIsImF1ZCI6WyJodHRwczovL2FwaS5vcGVuYWkuY29tL3YxIiwiaHR0cHM6Ly9vcGVuYWkub3BlbmFpLmF1dGgwYXBwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3MTM3OTU0NDAsImV4cCI6MTcxNDY1OTQ0MCwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBtb2RlbC5yZWFkIG1vZGVsLnJlcXVlc3Qgb3JnYW5pemF0aW9uLnJlYWQgb3JnYW5pemF0aW9uLndyaXRlIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiVGRKSWNiZTE2V29USHROOTVueXl3aDVFNHlPbzZJdEcifQ.Z0xaYPskWQDF58LBevHMp_jtgyE8BowCx4ZGphQ1rV8rXwuRZEze9yvQB77Z2yZLulhEQl5qEg5oyKr9ynmqNUxs2QoZScOoODWeHQvH67qpM7_NpgLOx6MgrX3Y0hNFPoytxQ-Tu4xzWsaygzSs6YcM4It0PdCXuNYmno-RCNCPyQ01YLEYMML-H_Ff7AkJtil75rHROEpzLiNdeDrxS-Y-9PnUNiopocF9R30GJyZnUm9eo9weAD48uTmZFB8He5X80dC2PK3nuBW8q9DIEr9WBeDXGNnXMUzHRJylX22-nSSdOvQSTxun2M0cTHfjqmMYMwtvMXR8TGfVTw0HRw'
+let openaiSentinelProofToken = 'gAAAAABWzEzNjYsIk1vbiBBcHIgMjIgMjAyNCAyMToxNzoyNCBHTVQrMDcwMCAoR2nhu50gxJDDtG5nIETGsMahbmcpIixudWxsLDUsIk1vemlsbGEvNS4wIChpUGhvbmU7IENQVSBpUGhvbmUgT1MgMTdfNCBsaWtlIE1hYyBPUyBYKSBBcHBsZVdlYktpdC82MDUuMS4xNSAoS0hUTUwsIGxpa2UgR2Vja28pIENyaU9TLzEyMy4wLjYzMTIuNTIgTW9iaWxlLzE1RTE0OCBTYWZhcmkvNjA0LjEiXQ=='
+let oaiDeviceId = 'ba88fa19-ee8a-4b1f-ad93-b84fecec0743'
+let userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/123.0.6312.52 Mobile/15E148 Safari/604.1'
+let cookie = '_dd_s=rum=0&expire=1713796351291; intercom-device-id-dgkjq2bp=ce2772dc-f109-4bd7-8d9c-2c51ca2a0a72; intercom-session-dgkjq2bp=NkJzUHNHbzI5azc1ajNzcVJidVNtSnJyV0VjVGVzTFNWQ1pWUlI3UVVMWU1SdTlnUWxxWGJLSmZqR3N0Q1NaYS0tWUJwbmNiZXhmU2crRTNrV0FnNWZKQT09--1512e82e90dc7b60c533d3eda88b5a57abf087e3; __Secure-next-auth.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..SteXvR82x2PIkL_R.fnKehzRpR7gDFGYRvDrUtT_6gNZz1WszU9WZy3HFqjeUewb52QCfRa05wRjSa3cAcOMMP6TAIh3E1ByF_ViAoqm6rFw2riBFnwhnOZKNaVtIH74bYFMdarNZ9LN7ZbWr4lYoh2QxU_bCELC90-mjEhP_3ZUeWA1bCunOiLArqzjaU9I1VTL-E_6F2peXYGj8GmOsALZ9e9x4p2fDPaMiP46M7gG88NTxX5GwJxW8Te4efP_A4Rq56x5m6caGOmflV117IXuyHf5xpfSDa8j22uWFqlWysFP6FZwc9Jf-4sFN8ePHKplQNJxqn-qjpjQT02qfB37o2knrqXFj-V5H1lSaWWd_hYYVjBh2KcVSJwuqfECVMPIep3qhJpuuwzPK4IGbsmhiXXCFZcag4HliRjRfAHcvOJII-a_WtTzhwUEkJukXPZm6II3L_egqfgEZ7vlKG-QQghwkXwLtnnaxZC_x1SlwDYLrIzl2Q6yuocPAmxYXI4HkBoplX57RE0BP1vP1oRKtpKzM3tv_814AOPcQzCjmqXEMNaBZOoavylklPHjo2XEKmEW2WctlYpZoJzhUaQxP08M-IBTxDUQWI26C8a96SiNzge1oglIvgElahFuRkoIfbNz1KUA5ZAEiGZAdBNGwK0-uXyOUyNcyQG7PGr5uYG238ULVCJMMxHp0sycqK01Xcpdm42knmZG8lWtXvPWN3C0H2KWmG4h2B_UusvRCqks4WoCoFSGGWAg--mAs2qn6LRPSpa65ZxZ17M4fwie39dXXqQAYyx_qifW7O10rWNSyy56V7o6cqqkTcR8870J5SGYas5w-fWxubRZ6Wyvff9f4HDHtrguaI9yJ3htxIZR-V2DJ9ux0bKOhU2TLGeqbShA6I008gMlsSrD_GZj4ibiqiIv-HvODv2CoE2wMgVvLmlpZ85sVWp-lSJtHEZyA2bfc6uxspUk9LDilVL9MDLZ5ZSUpnZ_nB4Er546JCjVDXNSmX5y0c2LPi05qbMoniFUpkF3fWwX7M09I4TRF6EcKEow8Znw6kSX3UfJKZ0vfXJH2GJlKRhTqKaITu4C6TT-yBsBs69ZieizaKcLyJy4uQrv7KkenlWO2ilMAH9wv1aevgNoG0QFOI2DUaiOC35V8oBWC8Xjm7JobHy-wvCx3e6vmXe2XsX6Fkew0T9ODEod2dgTouDcsXG9JsyHBsw74_kBxcc-LuquUunSOc5Ve2vC3kWg9VgueYKDo9APHXQcfV2AcwK0Or9a2NOuBlod8_MfgiC1KOesbDaRsLoGaVsD3bROKeS3byknrdnd6N8M68j5CVyVTRzSAN4s64WkNVcwCRrYJTPYkeRR2g50njOsZYS_EA6YGaP2BgEXpK5-RcoH8XVwGfu4vPWBRWArhdezr15gKkTvdRg17F5PxioSBwWqY5j7tA1Y_VAHbIZknGOU85dASQcb0EZFvE-QDRZ9i26lVPWbC9-yvXiCbqkiofiRJ28lWrxAVm5O2GW-hS-aY3kBRgIn-JPHNKNY81SdkBwVHopXsGU2DThbZItk5DF0dTGjcEXYuk9GV4Y5l0N91B2lUvv9WF-8-ydiHWaMGCR-0FPgaQUWHCPSbSPJvSRyl0KURj0uC8mK3CS185JyM1e3l9Cp8NVd1IdpJmVRStTw5W9ACuMM3yK-4HHUGgXhC0gief3PZpY1ExagXOhLw3tt7GoxyrU11T4YCvzf1UnyOgmZ5P_54yIjqsSy_yAS0O3zny-YFGyV4ye0_cEJmO8Rjf4stsmRmGE70TlS0mH_RMnqg4ZliUbMJgnTdK73LJkDgKPr0Z2vI-DfKgAzPpTs0McmZdu89xX8-5rGxq-naI1ISffwAntxGmEYbtpfxPrPMepXBzR33yqerzFE-8e5eB1f8oOwQeWIQ6sI8rR8-dq4ZSW8aJTL5TbDOLCTjHxf58L5f6ozmtCRN_UKmP2uCm2y2XyqPK2qix5hocX7keJunet1Em4HUZlXY2c3UujKpyoOgO17TdSDwmMe8kYiJgH7QJ0AgK-mBBjpHwCj7fjy83CRQzEL1DhLCwu_gmP_dDHT21LJoKhXZTZq04uCAkr2Y8GjQyJkhhQYU8vkNGe1wnviXNPZSPg8YH8vxIF0wWd9opBmXGtC6RPEmrjeRLsFDuePQgufMDPU3L6frYmix6tE7ZpR-C6qM4wI4hN8avUpPGwPdxewYSMPgcklvms7S0KlMGvL6DFeRnn622rn6zhCd-OJ5TV1WzoUWnhBBoB921qNIHpOX7dzG0f9Ot9X5yihCkCsuSllbZIRlBL623tsK4SNJyLmYBo9pTsRev8-ec7ZthdW48YWa-dU8ZXqrTJWE4eXTtQt96T_A9ATTsckZ9lplczY4dzYVSzG49n312zXaw8x6NmqPdU1HT2FAJKvJoD4MAUNFqG4LfiybHidZ6-PjgKNoytiVJLHQQWGFzzgRqQxD6JySgRt89Btksj4Hi5_VUl0oBuEIx6n6x_nvB2BwHqApszX1W9aiBdURyPEId2lN8eH9RmSmaaliB0g-CvUHikh1LYgLJo3QVfTBnfRGaIamy4c7sHrXufEi-xCWCGfWckA5j3KDoq5HZVeHbgUXRdLtIOG0hH0uBUjvAcBybwWB-27RBBF-qf71QlZdFHjZfGsY2Ts5puZ8UNAozo-dqccnGAyZ9PAm2e3MPeoyZFom4HXcrXPuZILAgWwu-v7qPje6QR09JiGFfh0-JVqEdynUY6NmXHfCEaZSkNc0rymDoJwM9iwXFbTf7ocQYrdDopElwbGUpYdSMOmxOZmm8hAZ0qx9ufA.A3nJu8eqMazgH9ZsR1MJhQ; oai-hlib=true; __Secure-next-auth.callback-url=https%3A%2F%2Fchat.openai.com; __cf_bm=afQU47zhowQunB6iN0I33DjS3igi6HMIgStPg6uGV6c-1713795436-1.0.1.1-EifT5v5v5Iwh1tfurtQbZ7l_wH8wwSDqo.MXDF.FxA6cHdttxMY34xyzWds1KyDQ8sqn15U_8L6bIaRfKDqx8g; _cfuvid=qzjxkxG3Efr4.345HQwYg2Pp7KoANak3pFNbA7orRKk-1713795436962-0.0.1.1-604800000; cf_clearance=LrOOqS8FyNPp992x8C33lRMIi00BtGh3tI2Be.v6Kr0-1713795425-1.0.1.1-RXKOML6kOD5v0Mf0pfkAjm6v1v1ZDxv8G617.GNbkLy1kFM7H8Y7.ChqoFyiKo8kJ0NCTewqujfwktGhenrWIw; __cf_bm=Uy4tsrzlbSSsjEAkoOAHg8Pw_KVTZf2S9DPB_a2M2PE-1713795423-1.0.1.1-j.Ezjrz3eWI1B5TfpwWE8HqCcRQcUC.M2rSNVto6v56ZNtsXwsasl1ZboQXFMpbA_m0opud5feCRR19O8f9UTQ; _cfuvid=2ygAY4__Z2EU7XYrCVO7LGs70NQVCajDO2Otcxx.9K4-1713795423747-0.0.1.1-604800000; cf_clearance=lkm.b3mG38pvimzkpmaUhibua.OT4pA.MCIWy4iW5kM-1713795373-1.0.1.1-jgPNkPT9qXP_1Tm1edEwVXJdYf3I2FYj8DLGMEt2_neWPN0M3qWq5pxQE__bQZx0agI4T6V_KCbn6lnpirH4eQ; cf_chl_3=; cf_chl_3=cf3c7b18aa36a09; __cflb=0H28vVfF4aAyg2hkHFTZ1MVfKmWgNcKErooQC6ctg1B; __Host-next-auth.csrf-token=dc09c91498c7ad24364505f42ba517fec588d0dd0539f652598f679f2144c430%7C492f93138edea8dc16b89583ef70935009217333b6b52165729260053659d3c7; oai-did=ba88fa19-ee8a-4b1f-ad93-b84fecec0743'
+
+
+const chatCompletion = axios.create({
     httpsAgent: new https.Agent({ rejectUnauthorized: false }),
     headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJxdWFuaHV5MTk5MDA5QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS9hdXRoIjp7InBvaWQiOiJvcmctR3F1SlNremJpbHUxYjhyTkh3bmlLRWtkIiwidXNlcl9pZCI6InVzZXItaTlOSU1pMHY5SnRkV0FZWlExQVEzcko1In0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJnb29nbGUtb2F1dGgyfDEwOTE5NTA0NjAzODk1ODA4NjQwNCIsImF1ZCI6WyJodHRwczovL2FwaS5vcGVuYWkuY29tL3YxIiwiaHR0cHM6Ly9vcGVuYWkub3BlbmFpLmF1dGgwYXBwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3MTM2Nzg2MjIsImV4cCI6MTcxNDU0MjYyMiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBtb2RlbC5yZWFkIG1vZGVsLnJlcXVlc3Qgb3JnYW5pemF0aW9uLnJlYWQgb3JnYW5pemF0aW9uLndyaXRlIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoicGRsTElYMlk3Mk1JbDJyaExoVEU5VlY5Yk45MDVrQmgifQ.LZ5wShevYutyuRgVAZ3A2IwcVFfbBD9l3S8ZLmL1xFywRFOsqsiXLP5-T-VymvV9ebFb64QtfhcHtqRH2OwD1Weu55D-h-sA5ndeTLQMzUMH92zchOsxuJcha3mbDhN8S28Xgeb4rbwdPNN0Veu-1f8bsPyh6zVogTc-khUc45Ki4HEfsP7dWKrptf5QD0t5pBgAV3a1Pa9OSU8gCVAU2Sjp91JrB7yY8vsgqcTYUspHHjx9VoP0xoDnlJGh_q90FbHCALH4fhcSiUrKHPt6PmjUSeJfCjn_yRTd-PsCWPPpWFkAeOuu5frElJBMzPqo6jIApUYkHJxipxplTWp_dA',
-        'Accept-Language': 'vi-VN,vi;q=0.9',
-        'oai-device-id': '9688CD4A-DED7-4A24-9E0B-55F10CD24B86',
-        'baggage': 'sentry-environment=production,sentry-public_key=1a01a4d155f3487186fbf103278eb9ed,sentry-release=com.openai.chat%401.2024.101%2B24862,sentry-trace_id=541240aa416144c9b2a0c9e9633717fe',
-        'Cache-Control': 'no-cache',
-        'sentry-trace': '541240aa416144c9b2a0c9e9633717fe-04bcd90656874ddc-0',
-        'content-length': '489',
-        'user-agent': 'ChatGPT/1.2024.101 (iOS 17.4.1; iPhone15,3; build 24862)',
-        'oai-client-type': 'ios',
-        'accept-encoding': 'gzip, deflate, br',
-        'cookie': '_uasid="Z0FBQUFBQm1KS2tqZnkzVmpJS1h3R0xYLUNmcFZmR1JVQ1lFUF9ET1dsT1BvaWVfcHZKdUxteHVMWm1GcWJUMWNmQjIzUWJLR0RIbVRyWkIzcXFyZTBPWGZGNTZ3TThiYWt1ai03OWVPTzkxN1ZfcW1zMHN4RlNSdUlVbEQ2NjI3Z2wtemt5Y3RTRjRCVmMyQjBYZjBvN3Zmb0lSS21QZWt3TEtrZUJJa3pWaDhkSHFHOG5TNjF4WTFYSHZUTTgwNGtqbDFlX25iWmo5Y2NWQXBfd1JNaHQwTURHWlQtZ3g4RXpNbXRXR2pKMGtsNy02dlhkT0xTdHp4QWpKVUxDd3ZJcm5LUDZoOGwxam5WM0RPZXg1bjM5LV8za0d1SGs3anFoYW1OcnN5MEdSaU1iZTRIRmRGTm9GbEstVkpwMm5HR0J5NUdYTHhXWTRReW5tY18tWkNYU3V6NWJrRkJ2NlBnPT0="; _umsid="Z0FBQUFBQm1KS2tqdVZpcHdlRWhLSjZERlZCSVgteTQ2TkNxdjhreTlKVjhhZVZlcldsWmlWMHhELWpfSWJJS2xYMm54X3VaM0dxcVFtMVFDRnhjZjRLOHJMUm5MU3RWTTdSMTctLUQ1enB6ZXlua2ZURHZxNkZya29PR2w1OGF5N2UzREllMl8zbFMwdG1wWGtDR0MxRWEtekVpZXBYRlhKNlZyQnNzaUE1ck0tTmpSUE9yNWEyQnFPNEd0amE0TXVQV0RiYUY4MFc0WVk3MVZFYS0tLXJRZlB4QkR3SEVHbDBNN3lFMVRGd1hqVWxZSzcxTUNrMD0="; _devicecheck=user-i9NIMi0v9JtdWAYZQ1AQ3rJ5:1713678623-fJOV67jqRlne1KZN16QQiWC5TnR051NX2dv%2FDYhI%2BdQ%3D; __cf_bm=aILQ8w3aYiQWO4InvbJc7dHIgY9ksvMWsqTEO27Zk.I-1713678563-1.0.1.1-BssvF4KU86c_JHgNGQ_xC5PNt6KPYRYeHL1yoKmXxAEp8D6lLNxTngMDCGDQJlC76XL10VbtP8trlELT.3z6CA; _cfuvid=BJk0W5nzk97q9PCEGG6QvEtebssqOFgNZabFV16ZANs-1713678563991-0.0.1.1-604800000; _preauth_devicecheck=9688CD4A-DED7-4A24-9E0B-55F10CD24B86:1713678563-8NDsubAzDXnKfPAIU%2FVpzAsJJ9uMZjSSpL7BM3A6Hxo%3D'
-    },
+        'content-type': 'application/json',
+        'accept': 'text/event-stream',
+        'openai-sentinel-chat-requirements-token': chatRequirementsToken,
+        'authorization': authorization,
+        'openai-sentinel-proof-token': openaiSentinelProofToken,
+        'sec-fetch-site': 'same-origin',
+        'oai-language': 'en-US',
+        'oai-device-id': oaiDeviceId,
+        'accept-language': 'vi-VN,vi;q=0.9',
+        'sec-fetch-mode': 'cors',
+        'origin': 'https://chat.openai.com',
+        'user-agent': userAgent,
+        'referer': 'https://chat.openai.com/',
+        'sec-fetch-dest': 'empty',
+        'cookie': cookie
+      },
+});
+
+const requireToken = axios.create({
+    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    headers: {
+        'content-type': 'application/json',
+        'accept': '*/*',
+        'authorization': authorization,
+        'sec-fetch-site': 'same-origin',
+        'oai-language': 'en-US',
+        'oai-device-id': oaiDeviceId,
+        'accept-language': 'vi-VN,vi;q=0.9',
+        'sec-fetch-mode': 'cors',
+        'origin': 'https://chat.openai.com',
+        'user-agent': userAgent,
+        'referer': 'https://chat.openai.com/',
+        'sec-fetch-dest': 'empty',
+        'cookie': cookie
+    }
 });
 
 function handleError(res, isStream, errMsg = "\n**Có lỗi vui lòng liên hệ admin tại** <a href='https://www.messenger.com/t/103965857842703/'>👉Messenger👈</a>") {
@@ -108,9 +136,18 @@ function handleError(res, isStream, errMsg = "\n**Có lỗi vui lòng liên hệ
   }
 }
 
+async function getRequirementsToken() {
+    const response = await requireToken.post(
+        `${baseUrl}/backend-api/sentinel/chat-requirements`,
+        {},
+    );
+    chatRequirementsToken = response.data.token;
+    console.log(`System: Successfully refreshed chat requirements token.`);
+}
+
 async function getNewSessionId() {
     let newDeviceId = randomUUID();
-    const response = await axiosInstance.post(
+    const response = await chatCompletion.post(
         `${baseUrl}/backend-anon/sentinel/chat-requirements`,
         {},
         {
@@ -150,6 +187,9 @@ async function handleChatCompletion(req, res) {
             websocket_request_id: randomUUID(),
         };
         // console.log("Request:", JSON.stringify(body.messages, null, 2));
+        
+        // get new token each request
+        await getRequirementsToken();
 
         const response = await axiosInstance.post(apiUrl, body, {
             responseType: "stream",
@@ -285,18 +325,4 @@ app.get('/v1/models', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`💡 Server is running at http://localhost:${port}`);
-
-    setTimeout(async () => {
-        while (true) {
-            try {
-                await getNewSessionId();
-                await wait(refreshInterval);
-            } catch (error) {
-                console.error("Error refreshing session ID, retrying in 1 minute...");
-                console.error("If this error persists, your country may not be supported yet.");
-                console.error("If your country was the issue, please consider using a U.S. VPN.");
-                await wait(errorWait);
-            }
-        }
-    }, 0);
 });
